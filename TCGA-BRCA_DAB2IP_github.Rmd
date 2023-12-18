@@ -1,7 +1,7 @@
 ---
 title: "DAB2IP expression among TCGA-BRCA tumor samples"
 author: "Jeremy M. Simon"
-date: "12/07/2023"
+date: "12/12/2023"
 output:
   html_document:
     toc: true
@@ -42,7 +42,7 @@ setwd("/proj/jmsimon/Baldwin/Angana/")
 
 
 # Import ER/PR/HER2 status for all patient samples
-```{r,cache=T,cache.lazy=F}
+```{r}
 EPHstatus <- read_tsv("brca_tcga_clinical_data_ER_PR_HER2.tsv") %>%
 	dplyr::select(c(`Sample ID`,`ER Status By IHC`,`IHC-HER2`,`PR status by ihc`)) %>%
 	mutate(
@@ -59,7 +59,7 @@ EPHstatus <- read_tsv("brca_tcga_clinical_data_ER_PR_HER2.tsv") %>%
 ```
 
 # Import tumor subtype and gene expression values for all patient samples, then compute _DAB2IP_ quartiles
-```{r,cache=T,cache.lazy=F}
+```{r}
 Subtype <- read_tsv("data_clinical_patient.txt",skip=4) %>%
 	dplyr::rename("SampleID" = PATIENT_ID) %>%
 	dplyr::select(c(SampleID,SUBTYPE)) %>%
@@ -88,7 +88,7 @@ DAB2IP <- TCGAexpr %>%
 ```
 
 # Combine all data, remove samples whose subtype is missing
-```{r,cache=T,cache.lazy=F}
+```{r}
 combined <- inner_join(inner_join(DAB2IP,EPHstatus),Subtype)
 
 combined <- combined %>%
@@ -98,7 +98,7 @@ combined <- combined %>%
 
 
 # Plot DAB2IP expression by subtype, boxplots (Fig 1A)
-```{r,cache=T,cache.lazy=F}
+```{r}
 # Get min cutoffs for each DAB2IP expression quartile
 DAB2IP.cuts <- TCGAexpr %>% 
     filter(Gene=="DAB2IP") %>% 
@@ -126,8 +126,8 @@ combined %>%
 	geom_text(label="4",x=5.55,y=2)
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("DAB2IP_expression_by_BRCA_subtype_boxplots_120723.pdf")
+```{r,echo=F}
+pdf("DAB2IP_expression_by_BRCA_subtype_boxplots_121223.pdf")
 combined %>%
 	select(SampleID,Expression,SUBTYPE) %>%
 	group_by(SUBTYPE) %>%
@@ -149,7 +149,7 @@ dev.off()
 ```
 
 # Import ROR-P scores for all samples
-```{r,cache=T,cache.lazy=F}
+```{r}
 RORP <- read_tsv("BRCA.1218_pam50scores.FINAL.txt") %>%
  	dplyr::rename("SampleID" = bcr_patient_barcode, "RORPscores" = `ROR-P (Subtype + Proliferation)`) %>%
  	dplyr::select(SampleID,RORPscores) %>%
@@ -159,7 +159,7 @@ RORP <- read_tsv("BRCA.1218_pam50scores.FINAL.txt") %>%
 ```
 
 # Plot boxplot of RORP by subtype for DAB2IP expression groups
-```{r,fig.width=12,cache=T,cache.lazy=F}
+```{r,fig.width=12}
 inner_join(TCGAexpr,inner_join(RORP,combined,by="SampleID"),by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE,RORPavg) %>%
  	dplyr::rename("Expression" = Expression.x,"DAB2IP_expression" = Expression.y) %>%
@@ -173,8 +173,8 @@ inner_join(TCGAexpr,inner_join(RORP,combined,by="SampleID"),by="SampleID") %>%
 	theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("DAB2IP_expression_with_RORP_by_BRCA_subtype_boxplots_120723.pdf")
+```{r,echo=F}
+pdf("DAB2IP_expression_with_RORP_by_BRCA_subtype_boxplots_121223.pdf")
 inner_join(TCGAexpr,inner_join(RORP,combined,by="SampleID"),by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE,RORPavg) %>%
  	dplyr::rename("Expression" = Expression.x,"DAB2IP_expression" = Expression.y) %>%
@@ -190,7 +190,7 @@ dev.off()
 ```
 
 # Compute ROR-P significance between DAB2IP-high and DAB2IP-low groups for each subtype
-```{r,cache=T,cache.lazy=F}
+```{r}
 rorp.d.low.lumA <- inner_join(TCGAexpr,inner_join(RORP,combined,by="SampleID"),by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE,RORPavg) %>%
  	dplyr::rename("Expression" = Expression.x,"DAB2IP_expression" = Expression.y) %>%
@@ -270,13 +270,13 @@ t.test(rorp.d.high.Her2,rorp.d.low.Her2)
 
 
 # Select DAB2IP-high and DAB2IP-low ER+ LumA tumors for differential expression analysis
-```{r,cache=T,cache.lazy=F}
+```{r}
 tumorsDE <- combined %>%
 	dplyr::select(SampleID,DAB2IP,ERstatus,SUBTYPE) %>%
 	dplyr::filter(ERstatus=="Positive") %>%
 	dplyr::filter(SUBTYPE=="BRCA_LumA") %>%
 	dplyr::filter(DAB2IP!="DAB2IP_mid")
-write_tsv(tumorsDE,"TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_120723.tsv")
+write_tsv(tumorsDE,"TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_121223.tsv")
 
 tumorsDE
 ```
@@ -298,10 +298,10 @@ for (i in 1:length(sampleFiles)) {
 }
 ```
 
-```{r,cache=T,cache.lazy=F}
+```{r}
 # Join sample IDs with filenames of new collapsed counts files and compile DESeq2 metadata
 sampleFiles <- grep("counts.030323.collapsed",list.files("rawCounts_DE"),value=TRUE)
-sampleInfo <- read_tsv("TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_120723.tsv")
+sampleInfo <- read_tsv("TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_121223.tsv")
 
 countFiles <- read_tsv("rawCounts_DE/gdc_sample_sheet.2020-11-25.tsv") %>%
 	dplyr::select(`Sample ID`,`File Name`) %>%
@@ -346,17 +346,17 @@ res_tbl <- rownames_to_column(as.data.frame(res), var = "Gene") %>%
 
 res_filt <- res_tbl %>%
 	dplyr::select(Gene,log2FoldChange,padj) %>%
-	dplyr::filter(padj<1e-10)
+	dplyr::filter(padj < 1e-5)
 
 # Write output
-write_tsv(res_filt,"TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_DESeq2_results_adjP1e10_120723.txt")
+write_tsv(res_filt,"TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_DESeq2_results_adjP1e5_121223.txt")
 
 ```
 
 
 # Read in DE results DAB2IP low/high ER+ LumA tumors
-```{r,cache=T,cache.lazy=F}
-DEG <- read_tsv("TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_DESeq2_results_adjP1e10_120723.txt")
+```{r}
+DEG <- read_tsv("TCGA_BRCA_tumors_DAB2IP_low_high_ERpositiveOnly_LumA_DESeq2_results_adjP1e5_121223.txt")
 
 DEG_any <- DEG %>%
 	pull(Gene)
@@ -368,14 +368,15 @@ TCGAexpr_DEG <- TCGAexpr %>%
 
 
 # Create manual ordering of tumors by subtype then by DAB2IP expression (Fig 3A)
-```{r,fig.width=20,cache=T,cache.lazy=F}
+```{r,fig.width=20}
 DAB2IP_order <- inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE) %>%
  	dplyr::rename("Expression" = Expression.x,"DAB2IP_expression" = Expression.y) %>%
  	dplyr::filter(!is.na(SUBTYPE)) %>%
  	dplyr::filter(ERstatus=="Positive" | ERstatus=="Negative") %>%
  	dplyr::filter(DAB2IP=="DAB2IP_high" | DAB2IP=="DAB2IP_low") %>%
- 	group_by(SUBTYPE) %>%
+# 	dplyr::filter(!Gene %in% c("SNORD104","SNORD11","SNORD6","SNORD93")) %>%       # Remove these due to SD=NA
+	group_by(SUBTYPE) %>%
  	dplyr::arrange(DAB2IP_expression,.by_group = T) %>%
  	dplyr::select(SampleID,DAB2IP_expression) %>%
  	unique() %>%
@@ -388,6 +389,7 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::filter(DAB2IP=="DAB2IP_high" | DAB2IP=="DAB2IP_low") %>%
  	dplyr::filter(!is.na(SUBTYPE)) %>%
  	dplyr::filter(ERstatus=="Positive" | ERstatus=="Negative") %>%
+#  dplyr::filter(!Gene %in% c("SNORD104","SNORD11","SNORD6","SNORD93")) %>%       # Remove these due to SD=NA
 	group_by(SUBTYPE) %>%
 	tidyHeatmap::heatmap(Gene,
 		SampleID,
@@ -402,16 +404,25 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
 	add_tile(DAB2IP)
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("DAB2IP_high_low_DEGs_expression_SUBTYPES_heatmap_LumADE_ordered_SubtypeThenDAB2IPexp_120723.pdf",width=20)
+```{r,echo=F}
+pdf("DAB2IP_high_low_DEGs_expression_SUBTYPES_heatmap_LumADE_ordered_SubtypeThenDAB2IPexp_121223.pdf",width=20)
 inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE) %>%
  	dplyr::rename("Expression" = Expression.x,"DAB2IP_expression" = Expression.y) %>%
  	dplyr::filter(DAB2IP=="DAB2IP_high" | DAB2IP=="DAB2IP_low") %>%
  	dplyr::filter(!is.na(SUBTYPE)) %>%
  	dplyr::filter(ERstatus=="Positive" | ERstatus=="Negative") %>%
+#	dplyr::filter(!Gene %in% c("SNORD104","SNORD11","SNORD6","SNORD93")) %>%       # Remove these due to SD=NA
 	group_by(SUBTYPE) %>%
-	tidyHeatmap::heatmap(Gene,SampleID,Expression,scale="none",palette_value=colorRamp2(c(-3, 0, 3), c("blue", "white", "red")),cluster_columns=F,column_order=DAB2IP_order,show_row_names = FALSE,show_column_names = FALSE) %>%
+	tidyHeatmap::heatmap(Gene,
+		SampleID,
+		Expression,
+		scale="none",
+		palette_value=colorRamp2(c(-3, 0, 3), c("blue", "white", "red")),
+		cluster_columns=F,
+		column_order=DAB2IP_order,
+		show_row_names = FALSE,
+		show_column_names = FALSE) %>%
 	add_tile(SUBTYPE) %>%
 	add_tile(DAB2IP)
 dev.off()
@@ -421,7 +432,7 @@ dev.off()
 
 
 # Explore pairwise correlation of tumors based on DEG expression profiles
-```{r,cache=T,cache.lazy=F}
+```{r}
 # Format sample metadata
 coldata <- inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE) %>%
@@ -443,6 +454,7 @@ degmat <- inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::filter(DAB2IP=="DAB2IP_high" | DAB2IP=="DAB2IP_low") %>%
  	dplyr::filter(!is.na(SUBTYPE)) %>%
  	dplyr::filter(ERstatus=="Positive" | ERstatus=="Negative") %>%
+#	dplyr::filter(!Gene %in% c("SNORD104","SNORD11","SNORD6","SNORD93")) %>%       # Remove these due to SD=NA
 	dplyr::select(-DAB2IP,-DAB2IP_expression,-ERstatus,-SUBTYPE) %>%	
 	pivot_wider(names_from=SampleID,values_from=Expression,values_fn = median)
 
@@ -453,7 +465,7 @@ cors <- cor(degmat.df[,coldata$SampleID[coldata$Group=="LumA_DAB2IP_low"]],degma
 ```
 
 # Plot correlation heatmap (Fig 3B)
-```{r,fig.width=14,cache=T,cache.lazy=F}
+```{r,fig.width=14}
 # Set up sample groupings and colors
 cols <- c(paletteer_d("nationalparkcolors::Redwoods")[1],		# Light green
 	  paletteer_d("nationalparkcolors::Everglades")[5],		# Dark green
@@ -514,8 +526,8 @@ ComplexHeatmap::Heatmap(cors[colnames(cors)[row_order],],
 )
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("TCGA_BRCA_DAB2IP_highVslow_DEG_corHeatmap_splitBySubype_LumAlowVSall_120723.pdf",height=4,width=13)
+```{r,echo=F}
+pdf("TCGA_BRCA_DAB2IP_highVslow_DEG_corHeatmap_splitBySubype_LumAlowVSall_121223.pdf",height=4,width=13)
 ComplexHeatmap::Heatmap(cors[colnames(cors)[row_order],],
 	show_row_names = F,
 	show_column_names = F,
@@ -535,7 +547,7 @@ dev.off()
 ```
 
 # Plot Proliferation scores for each tumor based on 11-gene panel (Fig 4A)
-```{r,fig.width=12,cache=T,cache.lazy=F}
+```{r,fig.width=12}
 PDscores <- read_tsv("TCGA_Dscore_Pscore.txt")
 
 left_join(combined,PDscores) %>%
@@ -551,8 +563,8 @@ left_join(combined,PDscores) %>%
 	facet_wrap(~SUBTYPE,ncol=5)
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("DAB2IP_status_vs_ProlifPscore_bySubtype_120723.pdf",width=12,height=6)
+```{r,echo=F}
+pdf("DAB2IP_status_vs_ProlifPscore_bySubtype_121223.pdf",width=12,height=6)
 left_join(combined,PDscores) %>%
 	dplyr::select(SampleID,ERstatus,SUBTYPE,D_Score,P_score_11genesMean,Expression,DAB2IP) %>%
 	dplyr::filter(ERstatus=="Positive") %>%
@@ -568,7 +580,7 @@ dev.off()
 ```
 
 # Compute significance for Proliferation scores for each subtype
-```{r,cache=T,cache.lazy=F}
+```{r}
 # LumA
 Pscore_LumA_low <- left_join(combined,PDscores) %>%
 	dplyr::select(SampleID,ERstatus,SUBTYPE,D_Score,P_score_11genesMean,Expression,DAB2IP) %>%
@@ -644,7 +656,7 @@ These putative targets were identified using [ChIP-Atlas](http://chip-atlas.org/
 Signal within 5kb of the transcription start site (TSS) of target genes was averaged for HMEC, MCF7, and MDA-MB-231 cells (n=20 studies total), 
 and filtered to retain promoters with signal greater than or equal to 10
 
-```{r,fig.width=20,cache=T,cache.lazy=F}
+```{r,fig.width=20}
 rela_targets <- read_tsv("RELA.5.breast.gt10.tsv",col_names="Gene") %>%
 	pull(Gene)
 
@@ -655,6 +667,7 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::filter(!is.na(SUBTYPE)) %>%
  	dplyr::filter(ERstatus=="Positive" | ERstatus=="Negative") %>%
  	dplyr::filter(Gene %in% rela_targets) %>%
+#  dplyr::filter(!Gene %in% c("SNORD104","SNORD11","SNORD6","SNORD93")) %>%       # Remove these due to SD=NA
 	group_by(SUBTYPE) %>%
 	tidyHeatmap::heatmap(Gene,
 		SampleID,
@@ -669,8 +682,8 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
 	add_tile(DAB2IP)
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("DAB2IP_high_low_DEGs_expression_SUBTYPES_heatmap_LumADE_ordered_SubtypeThenDAB2IPexp_042922_NFkBtargets_120723.pdf",width=20)
+```{r,echo=F}
+pdf("DAB2IP_high_low_DEGs_expression_SUBTYPES_heatmap_LumADE_ordered_SubtypeThenDAB2IPexp_042922_NFkBtargets_121223.pdf",width=20)
 inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE) %>%
  	dplyr::rename("Expression" = Expression.x,"DAB2IP_expression" = Expression.y) %>%
@@ -678,6 +691,7 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::filter(!is.na(SUBTYPE)) %>%
  	dplyr::filter(ERstatus=="Positive" | ERstatus=="Negative") %>%
  	dplyr::filter(Gene %in% rela_targets) %>%
+#  dplyr::filter(!Gene %in% c("SNORD104","SNORD11","SNORD6","SNORD93")) %>%       # Remove these due to SD=NA
 	group_by(SUBTYPE) %>%
 	tidyHeatmap::heatmap(Gene,SampleID,Expression,scale="none",palette_value=colorRamp2(c(-3, 0, 3), c("blue", "white", "red")),cluster_columns=F,column_order=DAB2IP_order,show_row_names = FALSE,show_column_names = FALSE) %>%
 	add_tile(SUBTYPE) %>%
@@ -686,7 +700,7 @@ dev.off()
 ```
 
 # Plot four putative target genes expression for each subtype split by DAB2IP status (Fig 7B)
-```{r,fig.width=10,fig.height=10,cache=T,cache.lazy=F}
+```{r,fig.width=10,fig.height=10}
 goi <- c("NEDD8", "IL17B", "SNRPE", "TBCA")
 
 inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
@@ -704,8 +718,8 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
 
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("Angana_TCGA_BRCA_ERpositive_DAB2IPhigh_vs_DAB2IPlow_LumA_DESeq2_UP_overlap_RELA_5_breast_gt10_boxplots_bySubtype_v4_120723.pdf",width=10,height=10)
+```{r,echo=F}
+pdf("Angana_TCGA_BRCA_ERpositive_DAB2IPhigh_vs_DAB2IPlow_LumA_DESeq2_UP_overlap_RELA_5_breast_gt10_boxplots_bySubtype_v4_121223.pdf",width=10,height=10)
 inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
 	dplyr::filter(Gene %in% goi) %>%
 	select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE) %>%
@@ -724,7 +738,7 @@ dev.off()
 
 
 # Plot heatmap of differentially expressed KEGG spliceosome genes (Fig 7D)
-```{r,fig.width=20,cache=T,cache.lazy=F}
+```{r,fig.width=20}
 kegg.splice.genes <- c("SNRPE","SRSF1","SNRPG","SRSF2","SNRPD1","SNRPF","BUD31","MAGOHB","HNRNPU","HNRNPC","SNRPB2","ALYREF","SNRPC","SF3B6","SNRNP27","SNRPA1","USP39","PPIL1","LSM3","SNRPB")
 
 inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
@@ -748,8 +762,8 @@ inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
 	add_tile(DAB2IP)
 ```
 
-```{r,echo=F,cache=T,cache.lazy=F}
-pdf("DAB2IP_high_low_DEGs_expression_SUBTYPES_heatmap_LumADE_ordered_SubtypeThenDAB2IPexp_DN_KEGGspliceosome_120723.pdf",width=20,height=6)
+```{r,echo=F}
+pdf("DAB2IP_high_low_DEGs_expression_SUBTYPES_heatmap_LumADE_ordered_SubtypeThenDAB2IPexp_DN_KEGGspliceosome_121223.pdf",width=20,height=6)
 inner_join(TCGAexpr_DEG,combined,by="SampleID") %>%
  	dplyr::select(SampleID,Gene,Expression.x,DAB2IP,Expression.y,ERstatus,SUBTYPE) %>%
  	dplyr::filter(Gene %in% kegg.splice.genes) %>%
@@ -766,7 +780,7 @@ dev.off()
 
 # Save workspace
 ```{r}
-save.image("TCGA-BRCA_DAB2IP_120723.RData")
+save.image("TCGA-BRCA_DAB2IP_121223.RData")
 ```
 
 # Get session info
