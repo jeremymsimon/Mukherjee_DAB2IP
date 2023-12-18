@@ -1,5 +1,5 @@
 # "DAB2IP expression among TCGA-BRCA tumor samples"  
-12/06/2023
+12/18/2023
 
 
 The code presented here supports the Mukherjee _et al_ publication entitled 
@@ -16,4 +16,4 @@ and RNA-seq data also now utilize RSEM whereas the data used here do not.
 The fully rendered `RMarkdown` html is deployed here:  
 https://jeremymsimon.github.io/Mukherjee_DAB2IP/TCGA-BRCA_DAB2IP_github.html
 
-Edited 12/06/23 to address reviewer comments
+Edited 12/18/23 to address reviewer comments
