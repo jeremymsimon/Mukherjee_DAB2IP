@@ -1,9 +1,9 @@
 # "DAB2IP expression among TCGA-BRCA tumor samples"  
-12/18/2023
+01/09/2024
 
 
 The code presented here supports the Mukherjee _et al_ publication entitled 
-"DAB2IP-Low Luminal A Breast Cancer Patients Exhibit Gene Expression Profiles Overlapping with More Aggressive Cancer Partly Related to IKK/NF-kB Activation" (2023),
+"DAB2IP-Low Luminal A Breast Cancer Patients Exhibit Gene Expression Profiles Overlapping with More Aggressive Cancer Partly Related to IKK/NF-kB Activation" (2024),
 _under review_. The steps outlined here recapitulate the analysis performed for preparation of the figures, 
 however, the figures will be subtly different given slight changes in software versions that occurred during manuscript preparation.
 
@@ -16,4 +16,4 @@ and RNA-seq data also now utilize RSEM whereas the data used here do not.
 The fully rendered `RMarkdown` html is deployed here:  
 https://jeremymsimon.github.io/Mukherjee_DAB2IP/TCGA-BRCA_DAB2IP_github.html
 
-Edited 12/18/23 to address reviewer comments
+Edited 01/09/24 to address reviewer comments
